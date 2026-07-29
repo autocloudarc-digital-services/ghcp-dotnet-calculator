@@ -62,9 +62,9 @@ contributions. Use the channel that matches your need:
 
 | Need | Start here |
 | --- | --- |
-| Setup, exercise, or usage question | [GitHub Discussions](https://github.com/multi-layer-perceptron/ghcp-dotnet-calculator/discussions) |
-| Idea or substantial proposal | [GitHub Discussions](https://github.com/multi-layer-perceptron/ghcp-dotnet-calculator/discussions) |
-| Reproducible defect or lab correction | [GitHub Issues](https://github.com/multi-layer-perceptron/ghcp-dotnet-calculator/issues) |
+| Setup, exercise, or usage question | [GitHub Discussions](https://github.com/autocloudarc-digital-services/ghcp-dotnet-calculator/discussions) |
+| Idea or substantial proposal | [GitHub Discussions](https://github.com/autocloudarc-digital-services/ghcp-dotnet-calculator/discussions) |
+| Reproducible defect or lab correction | [GitHub Issues](https://github.com/autocloudarc-digital-services/ghcp-dotnet-calculator/issues) |
 | Focused pull request | [Contributing guide](CONTRIBUTING.md) |
 | Suspected vulnerability | Private process in [Security policy](SECURITY.md) |
 | Conduct concern | Private process in [Code of Conduct](CODE_OF_CONDUCT.md) |
@@ -269,7 +269,7 @@ external repositories, create an empty repository in your allowed namespace,
 clone this source repository, then change `origin` to your new repository:
 
 ```bash
-git clone https://github.com/multi-layer-perceptron/ghcp-dotnet-calculator.git
+git clone https://github.com/autocloudarc-digital-services/ghcp-dotnet-calculator.git
 cd ghcp-dotnet-calculator
 git remote set-url origin https://github.com/YOUR-ORG-OR-USER/ghcp-dotnet-calculator.git
 git push --all origin
@@ -716,6 +716,13 @@ flowchart LR
 - The prompt files are staged so participants can practice one workflow at a
   time.
 - Prefer small, readable changes over broad rewrites during workshop exercises.
+
+## Contributing
+
+Contributions that improve the calculator, workshop exercises, documentation,
+accessibility, or Copilot customizations are welcome. Review the
+[contributing guide](CONTRIBUTING.md) before opening an issue or pull request.
+For Markdown-only changes, run `git diff --check` before submitting.
 
 ## License
 
