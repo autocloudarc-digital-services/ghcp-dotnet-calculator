@@ -3,9 +3,16 @@
 Console.WriteLine("Basic Calculator");
 
 var continueCalculating = true;
+var isFirstCalculation = true;
 
 while (continueCalculating)
 {
+    if (!isFirstCalculation)
+    {
+        ClearScreenWhenPossible();
+        Console.WriteLine("Basic Calculator");
+    }
+
     if (!TryReadOperand("Enter the first number: ", out var firstOperand)
         || !TryReadOperand("Enter the second number: ", out var secondOperand))
     {
@@ -48,6 +55,19 @@ while (continueCalculating)
     }
 
     continueCalculating = ReadContinueResponse();
+    isFirstCalculation = false;
+}
+
+static void ClearScreenWhenPossible()
+{
+    try
+    {
+        Console.Clear();
+    }
+    catch (IOException)
+    {
+        Console.WriteLine();
+    }
 }
 
 static bool TryReadOperand(string prompt, out double operand)

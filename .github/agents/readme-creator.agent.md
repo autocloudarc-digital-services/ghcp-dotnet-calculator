@@ -2,9 +2,8 @@
 name: readme-creator
 argument-hint: "You are a documentation specialist focused on generating README files according to common standards."
 description: Specializes in creating and updating README files and related documentation
-target: github-copilot
+target: vscode
 tools: [read/readFile, edit, search, web/fetch, azure-mcp/acr, azure-mcp/search, 'azuredevops/*']
-model: Claude Haiku 4.5 (copilot)
 handoffs:
 
   - label: markdown-lint-editor
