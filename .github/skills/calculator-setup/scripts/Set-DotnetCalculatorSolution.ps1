@@ -360,13 +360,13 @@ if ($MyInvocation.InvocationName -ne '.')
 
         if (-not (Test-Path -Path $ConsoleProjectFile))
         {
-            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'console', '--name', 'calculator', '--framework', 'net8.0', '--force') -WorkingDirectory $SolutionDir | Out-Null
+            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'console', '--name', 'calculator', '--force') -WorkingDirectory $SolutionDir | Out-Null
             Write-Status "Created console project: $ConsoleProjectFile" 'Success'
         }
 
         if (-not (Test-Path -Path $TestProjectFile))
         {
-            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'xunit', '--name', 'calculator.tests', '--framework', 'net8.0', '--force') -WorkingDirectory $SolutionDir | Out-Null
+            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'xunit', '--name', 'calculator.tests', '--force') -WorkingDirectory $SolutionDir | Out-Null
             Write-Status "Created xUnit project: $TestProjectFile" 'Success'
         }
 
