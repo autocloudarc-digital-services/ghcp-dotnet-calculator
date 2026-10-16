@@ -4,6 +4,18 @@ var continueCalculating = true;
 
 while (continueCalculating)
 {
+	if (!Console.IsOutputRedirected)
+	{
+		try
+		{
+			Console.Clear();
+		}
+		catch (IOException)
+		{
+		}
+	}
+
+	Console.WriteLine("Calculator");
 	Console.Write("Enter the first number: ");
 	var firstInput = Console.ReadLine();
 
