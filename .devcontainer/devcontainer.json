@@ -97,6 +97,7 @@
         "ms-azuretools.vscode-bicep",
         "ms-azuretools.vscode-containers",
         "ms-dotnettools.csdevkit",
+        "ms-dotnettools.upgrade-agent",
         "ms-playwright.playwright",
         "ms-vscode.azurecli",
         "ms-vscode.powershell",
