@@ -16,7 +16,8 @@ This repository is a focused .NET calculator learning workspace with GitHub Copi
 
 High-signal areas include:
 
-- A .NET 10 calculator solution under `src/workspace/calculator-xunit-testing/`
+- A staged calculator solution under `src/workspace/calculator-xunit-testing/`,
+  starting on .NET 8 and upgrading to .NET 10 only at prompt `3.01`
 - A console calculator project under `src/workspace/calculator-xunit-testing/calculator/`
 - A shared calculator library under `src/workspace/calculator-xunit-testing/calculator.library/`
 - A Blazor web app under `src/workspace/calculator-xunit-testing/calculator.web/`
@@ -25,6 +26,17 @@ High-signal areas include:
 - A PostgreSQL seeding skill for manual local workflows and a Testcontainers-first test strategy
 - Prompt, agent, and skill customization assets under `.github/`
 - GitHub workflows under `.github/workflows/`
+
+The Dev Container supplies SDKs and runtimes for .NET 8 and .NET 10. Initial
+console/test projects target `net8.0`, use `calculator.sln`, and have a
+workspace-local `global.json` selecting SDK 8. Run commands inside the generated
+workspace to apply that pin; the repository root may select SDK 10.
+At prompt `3.01`, update the workspace SDK pin to 10,
+use GitHub Copilot upgrade (`ms-dotnettools.upgrade-agent`, successor
+to App Modernization), and migrate to `.slnx`. The four-project tree and
+`.slnx` validation commands below describe the later stage; substitute `.sln`
+before the upgrade. Never retarget early exercises or downgrade existing
+later-stage work to match initial setup.
 
 When generating or modifying code, prefer patterns that already exist in the repository over generic or outdated examples.
 

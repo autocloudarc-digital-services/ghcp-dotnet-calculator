@@ -33,13 +33,20 @@ proceed directly through an Issue and pull request.
 
 ## Validation
 
-For calculator changes:
+For calculator changes after prompt `3.01` (.NET 10):
 
 ```powershell
 dotnet restore src/workspace/calculator-xunit-testing/calculator.slnx
 dotnet build src/workspace/calculator-xunit-testing/calculator.slnx --no-restore
 dotnet test src/workspace/calculator-xunit-testing/calculator.slnx --no-build
 ```
+
+For the initial .NET 8 stage, use `calculator.sln` in those commands with
+SDK 8, running inside the generated workspace so its `global.json` applies.
+The Dev Container installs both SDKs; SDK 10 selection, framework
+upgrade through GitHub Copilot upgrade, and `.slnx` migration belong to prompt
+`3.01`. Preserve the stage owned by each exercise rather than retargeting all
+examples to the latest SDK.
 
 For Markdown and customization changes:
 

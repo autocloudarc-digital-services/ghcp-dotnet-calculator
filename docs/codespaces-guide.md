@@ -65,8 +65,9 @@ The repository's [.devcontainer/devcontainer.json](../.devcontainer/devcontainer
 builds the same Linux environment for browser-based and desktop-connected
 Codespaces.
 
-* Ubuntu Noble, the .NET 10 SDK, and .NET 8 runtimes support the staged
-  calculator build, test, console, upgrade, and Blazor exercises
+* Ubuntu Noble with SDKs and runtimes for .NET 8 and .NET 10 installed side
+  by side supports the complete lab; projects start on .NET 8 and upgrade
+  only at prompt `3.01`
 * Docker-in-Docker, Compose, and Buildx support PostgreSQL Testcontainers and
   local container cleanup
 * Node.js LTS, npm, npx, and headless Chromium support Playwright and Memory MCP
@@ -101,9 +102,12 @@ selected profile affects new terminals only.
 
 ## Run The Environment Preflight
 
-The post-create script validates required commands, checks the .NET 10 SDK,
-.NET 8/10 runtimes, Bicep, Docker, and `gh-aw`, prepares Chromium for the pinned
-Playwright MCP server and locked standalone browser runner, and restores the solution.
+The post-create script validates required commands, checks SDKs and runtimes
+for both .NET 8 and .NET 10, Bicep, Docker, and `gh-aw`, and prepares Chromium for the pinned
+Playwright MCP server and locked standalone browser runner. It restores an
+existing `.sln` or `.slnx` from inside the workspace so its SDK pin applies,
+but does not create, retarget, or build calculator projects. The setup skill
+owns initial project creation, build, and test discovery.
 Rerun it after a rebuild or when diagnosing a partial setup:
 
 ```bash
@@ -128,10 +132,23 @@ azd version
 terraform version
 ```
 
-`dotnet --version` identifies the selected SDK, while each `.csproj` declares
-its actual target framework. SDK 10 plus .NET 8 runtimes can successfully run
-an unupgraded `net8.0` solution. Read project metadata rather than treating the
-toolchain inventory as proof the upgrade happened.
+The setup skill generates a workspace-local `global.json` selecting SDK 8.
+Run `dotnet --version` inside `src/workspace/calculator-xunit-testing/` after
+fresh setup; it must report `8.0.x`. The repository root may select SDK 10.
+Both starter projects target `net8.0`. Use `calculator.sln` before prompt
+`3.01` because SDK 8 cannot build `.slnx`.
+At prompt `3.01`, update the workspace SDK pin to an installed SDK 10 version.
+No container image change or rebuild is needed because both SDKs are already
+installed. Verify SDK 10 is selected inside the workspace, then use
+GitHub Copilot upgrade to retarget projects
+and migrate the solution to `.slnx` as described in
+[Exercise 02.01](../lab-exercises/02.01-upgrade-dotnet-8-to-10.md).
+SDK installation alone does not retarget a project.
+
+If your checkout already contains the later .NET 10 implementation, do not
+downgrade or overwrite it to satisfy the initial setup instructions. Resume at
+the matching upgrade stage, or use the explicitly approved lab reset workflow
+to preserve completed work before starting again.
 
 Configured MCP servers may not be exposed in every host. The
 [browser-validation skill](../.github/skills/validate-calculator-with-playwright/SKILL.md#repeatable-extended-runner)
@@ -143,7 +160,7 @@ Verify Docker and the full Testcontainers path before Exercise 01.04:
 
 ```bash
 docker info
-dotnet test src/workspace/calculator-xunit-testing/calculator.slnx
+dotnet test src/workspace/calculator-xunit-testing/calculator.sln
 ```
 
 A Docker error is an environment failure, not a calculator test failure. If

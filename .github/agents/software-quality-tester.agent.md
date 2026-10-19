@@ -33,7 +33,13 @@ state. The current active calculator workspace is under
 * Testcontainers PostgreSQL and Npgsql for runtime test data loading
 * 20 passing tests as the current baseline, unless source files show otherwise
 
-If the prompt mentions stale facts such as .NET 8-only requirements, 51+ tests,
+For a fresh workshop, SDK 8, `net8.0`, and `calculator.sln` are intentional
+through the console, CSV, and PostgreSQL stages. Both SDKs are preinstalled;
+the generated workspace-local `global.json` selects SDK 8. Select SDK 10 and upgrade
+through GitHub Copilot upgrade only at prompt `3.01`, then use `.slnx`.
+Do not classify the initial .NET 8 baseline as stale or retarget it early.
+
+If the prompt mentions stale facts such as 51+ tests,
 future Angular UI scope, or fixed Azure DevOps work items, treat them as legacy
 context unless the user explicitly asks to validate that older target.
 

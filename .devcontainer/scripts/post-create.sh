@@ -2,11 +2,11 @@
 # Copyright (c) Microsoft Corporation.
 # SPDX-License-Identifier: MIT
 #
-# Validate the Codespaces toolchain and warm the solution package cache.
+# Validate the side-by-side .NET 8 and .NET 10 Codespaces toolchain.
 
 set -euo pipefail
 
-readonly SOLUTION_PATH="src/workspace/calculator-xunit-testing/calculator.slnx"
+readonly SOLUTION_DIRECTORY="src/workspace/calculator-xunit-testing"
 readonly PLAYWRIGHT_VERSION="1.52.0-alpha-2025-03-26"
 readonly BROWSER_TOOLS_PATH=".github/skills/validate-calculator-with-playwright"
 
@@ -67,8 +67,12 @@ main() {
     require_command "${command_name}"
   done
 
+  dotnet --list-sdks | grep -q '^8\.' || {
+    printf "ERROR: The initial .NET 8 SDK is unavailable.\n" >&2
+    return 1
+  }
   dotnet --list-sdks | grep -q '^10\.' || {
-    printf "ERROR: The .NET 10 SDK is unavailable.\n" >&2
+    printf "ERROR: The .NET 10 SDK for the upgrade exercise is unavailable.\n" >&2
     return 1
   }
   dotnet --list-runtimes | grep -q '^Microsoft.NETCore.App 10\.' || {
@@ -102,11 +106,15 @@ main() {
   retry_command \
     npm exec --prefix "${BROWSER_TOOLS_PATH}" -- playwright install chromium
 
-  if [[ -f "${SOLUTION_PATH}" ]]; then
-    dotnet restore "${SOLUTION_PATH}"
+  if [[ -f "${SOLUTION_DIRECTORY}/calculator.sln" ]]; then
+    (cd "${SOLUTION_DIRECTORY}" && dotnet restore calculator.sln)
+  elif [[ -f "${SOLUTION_DIRECTORY}/calculator.slnx" ]]; then
+    (cd "${SOLUTION_DIRECTORY}" && dotnet restore calculator.slnx)
   fi
 
   printf "Codespaces toolchain validation completed.\n"
+  printf "For a fresh workspace, use calculator-setup to create the .NET 8 solution.\n"
+  printf "Both SDKs are installed; upgrade the calculator only at prompt 3.01.\n"
   printf "Authentication remains user-scoped. Run 'gh auth status' and "
   printf "'az account show' before exercises that use those services.\n"
   printf "Verify GitHub Copilot upgrade in the active VS Code profile; "

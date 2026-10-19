@@ -337,20 +337,43 @@ if ($MyInvocation.InvocationName -ne '.')
         $ConsoleProjectFile = Join-Path -Path $ConsoleProjectDir -ChildPath 'calculator.csproj'
         $TestProjectFile = Join-Path -Path $TestProjectDir -ChildPath 'calculator.tests.csproj'
 
+        foreach ($ProjectFile in @($ConsoleProjectFile, $TestProjectFile))
+        {
+            if (Test-Path -Path $ProjectFile)
+            {
+                [xml]$ExistingProject = Get-Content -Path $ProjectFile -Raw
+                $TargetFramework = $ExistingProject.SelectSingleNode('//TargetFramework')
+                if ($null -ne $TargetFramework -and $TargetFramework.InnerText -ne 'net8.0')
+                {
+                    throw "Initial setup requires net8.0, but $ProjectFile targets $($TargetFramework.InnerText). Preserve this later-stage workspace; do not downgrade it by rerunning setup."
+                }
+            }
+        }
+
         Write-Status "Repository root: $ResolvedRepoRoot"
         New-Item -ItemType Directory -Path $SolutionDir -Force | Out-Null
         Write-Status "Solution directory ready: $SolutionDir" 'Success'
 
+        Copy-TemplateIfMissing -TemplatePath (Join-Path -Path $TemplateDir -ChildPath 'global.json') -DestinationPath (Join-Path -Path $SolutionDir -ChildPath 'global.json')
+
         $SolutionFile = Join-Path -Path $SolutionDir -ChildPath "$SolutionName.slnx"
+        $LegacySolutionFile = Join-Path -Path $SolutionDir -ChildPath "$SolutionName.sln"
+        if (Test-Path -Path $LegacySolutionFile)
+        {
+            $SolutionFile = $LegacySolutionFile
+        }
+
         if (-not (Test-Path -Path $SolutionFile))
         {
-            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'sln', '--name', $SolutionName) -WorkingDirectory $SolutionDir | Out-Null
-            $GeneratedSln = Join-Path -Path $SolutionDir -ChildPath "$SolutionName.sln"
-            if ((Test-Path -Path $GeneratedSln) -and -not (Test-Path -Path $SolutionFile))
+            $SolutionArguments = @('new', 'sln', '--name', $SolutionName)
+            $SdkVersion = Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('--version') -WorkingDirectory $SolutionDir
+            if ([int]($SdkVersion.ToString().Trim().Split('.')[0]) -ge 9)
             {
-                $SolutionFile = $GeneratedSln
+                $SolutionArguments += @('--format', 'sln')
             }
 
+            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList $SolutionArguments -WorkingDirectory $SolutionDir | Out-Null
+            $SolutionFile = $LegacySolutionFile
             Write-Status "Created solution file: $SolutionFile" 'Success'
         }
         else
@@ -360,13 +383,13 @@ if ($MyInvocation.InvocationName -ne '.')
 
         if (-not (Test-Path -Path $ConsoleProjectFile))
         {
-            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'console', '--name', 'calculator', '--force') -WorkingDirectory $SolutionDir | Out-Null
+            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'console', '--name', 'calculator', '--framework', 'net8.0', '--force') -WorkingDirectory $SolutionDir | Out-Null
             Write-Status "Created console project: $ConsoleProjectFile" 'Success'
         }
 
         if (-not (Test-Path -Path $TestProjectFile))
         {
-            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'xunit', '--name', 'calculator.tests', '--force') -WorkingDirectory $SolutionDir | Out-Null
+            Invoke-CheckedCommand -FilePath 'dotnet' -ArgumentList @('new', 'xunit', '--name', 'calculator.tests', '--framework', 'net8.0', '--force') -WorkingDirectory $SolutionDir | Out-Null
             Write-Status "Created xUnit project: $TestProjectFile" 'Success'
         }
 

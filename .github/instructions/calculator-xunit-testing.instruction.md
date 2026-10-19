@@ -8,6 +8,15 @@ applyTo: "src/workspace/calculator-xunit-testing/**"
 
 The Calculator xUnit Testing project is a .NET 10 solution demonstrating shared calculator logic, a console app, a Blazor web app, and xUnit tests.
 
+That inventory describes the post-upgrade stage. Initial setup uses SDK 8,
+`net8.0` console/test projects, and `calculator.sln`. Keep that baseline through
+CSV and PostgreSQL exercises. Both SDKs are installed in the Dev Container;
+initial setup generates a workspace-local `global.json` selecting SDK 8.
+At `3.01`, update that SDK pin to 10 and upgrade through GitHub Copilot
+upgrade only at prompt `3.01`, then migrate to `.slnx`. Use `.sln` in the
+validation command below before that transition. Do not downgrade existing
+later-stage projects or introduce library/web projects during initial setup.
+
 ## Folder Structure
 
 * `src/workspace/calculator-xunit-testing/calculator/`: .NET console project with console interaction
@@ -15,7 +24,7 @@ The Calculator xUnit Testing project is a .NET 10 solution demonstrating shared 
 * `src/workspace/calculator-xunit-testing/calculator.web/`: Blazor web app with calculator UI and services
 * `src/workspace/calculator-xunit-testing/calculator.tests/`: xUnit test project
 * `src/workspace/calculator-xunit-testing/calculator.slnx`: Solution file
-* `src/workspace/Set-DotnetSlnForCalculator.ps1`: Script that creates the active solution structure
+* `.github/skills/calculator-setup/scripts/Set-DotnetCalculatorSolution.ps1`: Script that creates the initial solution structure
 * `.github/skills/reset-calculator-lab/`: Skill that preserves and removes the generated solution structure
 
 ## Libraries and Frameworks

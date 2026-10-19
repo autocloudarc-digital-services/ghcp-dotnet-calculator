@@ -23,6 +23,15 @@ Copilot Chat uses your licensed GitHub account. The guide also identifies the
 additional GitHub, MCP, browser, Azure, and cleanup checkpoints introduced in
 later modules.
 
+The Dev Container installs SDKs 8 and 10 side by side. Module 01 starts with
+`net8.0` projects, `calculator.sln`, and a generated workspace-local
+`global.json` selecting SDK 8. Keep .NET 8 through the CSV and PostgreSQL prompts.
+Select SDK 10 only in
+[Exercise 02.01 / prompt 3.01](02.01-upgrade-dotnet-8-to-10.md), use GitHub
+Copilot upgrade (the successor to App Modernization), and migrate to
+`calculator.slnx`. Blazor and subsequent exercises use the .NET 10 stage.
+Container creation does not perform that upgrade.
+
 ```mermaid
 flowchart LR
   Start([Start]) --> M00["Module 00<br/>Orient"]

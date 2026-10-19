@@ -5,8 +5,9 @@ description: Repository-wide operating guidance for coding agents working on the
 
 ## Repository Overview
 
-This repository is a GitHub Copilot learning workspace built around a .NET 10
-calculator. It combines a console app, a shared arithmetic library, an
+This repository is a GitHub Copilot learning workspace starting with a .NET 8
+calculator and upgrading to .NET 10 only at prompt `3.01`. Its later stage
+combines a console app, a shared arithmetic library, an
 interactive Blazor web app, xUnit tests, workshop exercises, Copilot
 customizations, GitHub Actions examples, and Azure deployment assets.
 
@@ -39,13 +40,24 @@ specifically about those artifacts.
 
 Use the repository root as the working directory. The active solution requires:
 
-* .NET 10 SDK
+* .NET 8 and .NET 10 SDKs, installed side by side in the Dev Container;
+  use SDK 8 initially and upgrade through GitHub Copilot upgrade at `3.01`
 * PowerShell 7 for repository scripts
 * Docker Desktop or another compatible Docker daemon for Testcontainers tests
 * Node.js LTS for MCP and `npx`-based exercises
 * Git and VS Code for the intended workshop workflow
 
 Confirm the local toolchain before changing the calculator:
+
+The Dev Container provides both SDKs and runtimes. Initial setup creates
+`calculator.sln`, `net8.0` projects, and a workspace-local `global.json`
+selecting SDK 8. Run commands inside that workspace to apply the pin; the
+repository root may select SDK 10. The `.slnx` commands below describe the
+post-upgrade stage: before `3.01`, use `calculator.sln` instead. SDK 8 cannot
+build `.slnx`. At `3.01`, follow the upgrade prompt to update the workspace
+SDK pin to 10, retarget projects through the extension,
+and migrate the solution format. Preserve any existing later-stage work;
+do not downgrade it or run a reset without explicit approval.
 
 ```powershell
 dotnet --info

@@ -1,15 +1,16 @@
 ---
 title: ghcp-dotnet-calculator
-description: GitHub Copilot learning workspace for a .NET 10 console calculator with xUnit, CSV, and Testcontainers PostgreSQL tests
+description: GitHub Copilot calculator lab starting on .NET 8 and upgrading to .NET 10 with xUnit, CSV, and Testcontainers PostgreSQL tests
 ---
 
 # ghcp-dotnet-calculator
 
 ## Overview
 
-GitHub Copilot learning workspace for a small .NET 10 calculator lab.
+GitHub Copilot learning workspace for a calculator lab that starts on .NET 8
+and upgrades to .NET 10 at prompt `3.01`.
 
-[License: MIT](LICENSE) [.NET 10](https://dotnet.microsoft.com/) [xUnit](https://xunit.net/) [Testcontainers](https://testcontainers.com/) [GitHub Copilot](https://github.com/features/copilot)
+[License: MIT](LICENSE) [.NET 8 to 10](https://dotnet.microsoft.com/) [xUnit](https://xunit.net/) [Testcontainers](https://testcontainers.com/) [GitHub Copilot](https://github.com/features/copilot)
 
 This repository contains a compact calculator workspace for practicing GitHub
 Copilot-assisted development, testing, refactoring, prompt workflows, and
@@ -41,6 +42,26 @@ flowchart TB
 The calculator is the practice surface, while the surrounding Copilot and
 automation assets teach how context, tools, guardrails, and validation compose
 into a complete AI-assisted development workflow.
+
+### Framework Stages
+
+| Stage | SDK and targets | Solution |
+| ----- | --------------- | -------- |
+| Initial setup, console, tests, CSV, and PostgreSQL | .NET 8 SDK, `net8.0` | `calculator.sln` |
+| Prompt `3.01` / Exercise 02.01 | Select SDK 10 and upgrade using GitHub Copilot upgrade, the successor to App Modernization | Migrate `.sln` to `.slnx` |
+| Blazor, Azure, and later exercises | .NET 10 SDK, `net10.0` | `calculator.slnx` |
+
+The Dev Container installs SDKs and runtimes for both .NET 8 and .NET 10.
+Fresh setup generates a workspace-local `global.json` selecting SDK 8;
+projects stay on `net8.0` until prompt `3.01` updates the SDK pin and targets.
+Running `dotnet --version` at the repository root may select SDK 10 instead.
+The checked-in later
+implementation and completed reference may already target .NET 10; do not
+downgrade or overwrite that work to repeat the initial stage. Use the
+[setup skill](.github/skills/calculator-setup/SKILL.md) for a fresh baseline
+after any explicitly approved reset. See the
+[upgrade exercise](lab-exercises/02.01-upgrade-dotnet-8-to-10.md) for the
+SDK/project transition at prompt `3.01`; no container rebuild is needed then.
 
 ## Lab Use Notice
 
@@ -97,7 +118,7 @@ Special thanks, appreciation and gratitude to the Microsoft and GitHub teams for
 | GitHub account | Required to fork, clone, open Codespaces, and use Copilot-assisted workshop flows. |
 | Git | Required to clone the repository, create branches, and practice GitHub Flow. |
 | VS Code | Recommended editor for the workspace, reusable prompt files, and Copilot Chat. |
-| .NET 10 SDK | Required to restore, build, test, and run the calculator locally. |
+| .NET 8 and .NET 10 SDKs | Dev Container installs both. Use SDK 8 initially and upgrade the calculator at prompt `3.01`. |
 | Docker Desktop | Required for the Testcontainers PostgreSQL-backed test data workflow. |
 | Node.js LTS | Required for MCP-related exercises that use `npx` to run local MCP server configurations. |
 | GitHub Copilot | Recommended for the workshop exercises; the calculator can build and run without Copilot. |
@@ -107,8 +128,8 @@ Special thanks, appreciation and gratitude to the Microsoft and GitHub teams for
 | Path | Additional tools |
 | ---- | ---------------- |
 | GitHub Codespaces | Browser or VS Code access. The repository dev container supplies the required runtimes, CLIs, caches, and extensions. |
-| Local Windows, macOS, or Linux setup | .NET 10 SDK, Git, VS Code, Docker Desktop, and Node.js LTS for MCP `npx` workflows. |
-| Manual PowerShell validation | PowerShell 7, .NET 10 SDK, Docker Desktop, and repository write access. |
+| Local Windows, macOS, or Linux setup | .NET 8 SDK initially, Git, VS Code, Docker Desktop, and Node.js LTS for MCP `npx` workflows. |
+| Manual PowerShell validation | PowerShell 7, .NET 8 SDK initially, Docker Desktop, and repository write access. |
 | GitHub Actions practice | GitHub CLI is optional, but useful for creating issues, branches, and pull requests from the terminal. |
 | Copilot workshop flows | A Copilot-enabled GitHub account and access to Copilot Chat in VS Code. |
 
@@ -159,13 +180,12 @@ SDK is available:
 dotnet --info
 ```
 
-Then restore, build, and test the calculator solution before starting an
-exercise:
+After initial setup, restore, build, and test the .NET 8 solution:
 
 ```bash
-dotnet restore src/workspace/calculator-xunit-testing/calculator.slnx
-dotnet build src/workspace/calculator-xunit-testing/calculator.slnx --no-restore
-dotnet test src/workspace/calculator-xunit-testing/calculator.slnx --no-build
+dotnet restore src/workspace/calculator-xunit-testing/calculator.sln
+dotnet build src/workspace/calculator-xunit-testing/calculator.sln --no-restore
+dotnet test src/workspace/calculator-xunit-testing/calculator.sln --no-build
 ```
 
 ### Permissions And Licensing
@@ -187,7 +207,7 @@ administrator before the workshop. This repository is licensed under [MIT](LICEN
 
 | Path | Typical time | Best for | Status |
 | ---- | ------------ | -------- | ------ |
-| GitHub Codespaces | 5-10 min | Participants who want the least local setup | Supported when .NET 10 and Docker are available |
+| GitHub Codespaces | 5-10 min | Participants who want the least local setup | Both SDKs and Docker installed; calculator upgrades at prompt `3.01` |
 | Local VS Code setup | 10-15 min | Participants who already have .NET and Docker installed | Recommended |
 | Manual PowerShell validation | 10-15 min | Windows users validating from PowerShell | Supported |
 | Facilitator walkthrough | 15-20 min | Instructors leading setup, test execution, and first calculator run | Supported |
@@ -210,7 +230,7 @@ the Blazor port, preserve work, and stop or delete the Codespace safely.
 
 ### Option B - Local VS Code Setup
 
-1. Install [VS Code](https://code.visualstudio.com/), Git, the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), and Docker Desktop.
+1. Install [VS Code](https://code.visualstudio.com/), Git, the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), and Docker Desktop.
 2. Clone or fork the repository using Fork And Clone.
 3. Open the repository folder in VS Code.
 4. Run `dotnet --info` in the integrated terminal.
@@ -222,7 +242,7 @@ the Blazor port, preserve work, and stop or delete the Codespace safely.
 Use this path when you want to run setup, tests, and the console calculator from
 PowerShell.
 
-1. Install Git for Windows, PowerShell 7, Docker Desktop, and the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
+1. Install Git for Windows, PowerShell 7, Docker Desktop, and the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 2. Open a new PowerShell terminal so PATH changes are loaded.
 3. Verify the SDK:
 
@@ -241,7 +261,7 @@ start from the same checkpoints.
 
 1. Confirm every participant can open the repository in Codespaces or local VS
    Code.
-2. Ask participants to run `dotnet test src/workspace/calculator-xunit-testing/calculator.slnx` before making changes.
+2. After setup, ask participants to run `dotnet test calculator.sln` from inside the generated workspace so its SDK 8 pin applies. Switch that pin and upgrade the calculator only at prompt `3.01`.
 3. Walk through the setup, implementation, testing, CSV, PostgreSQL, and .NET
    upgrade prompts in order.
 4. Start with a small scoped change, then review the generated diff and test
@@ -260,10 +280,11 @@ or use it as a workshop sandbox.
    cd ghcp-dotnet-calculator
    ```
 
-3. Verify the solution builds:
+3. Run the [initial setup exercise](lab-exercises/01.01-solution-setup.md),
+   then verify the .NET 8 solution builds:
 
    ```bash
-   dotnet build src/workspace/calculator-xunit-testing/calculator.slnx
+   dotnet build src/workspace/calculator-xunit-testing/calculator.sln
    ```
 
 If your organization uses GitHub Enterprise Managed Users and cannot fork
@@ -294,11 +315,21 @@ bash .devcontainer/scripts/post-create.sh
 
 ### .NET Calculator Workflow
 
+For the initial .NET 8 stage, after running the setup skill:
+
 ```bash
-dotnet restore src/workspace/calculator-xunit-testing/calculator.slnx
-dotnet build src/workspace/calculator-xunit-testing/calculator.slnx --no-restore
-dotnet test src/workspace/calculator-xunit-testing/calculator.slnx --no-build
+dotnet restore src/workspace/calculator-xunit-testing/calculator.sln
+dotnet build src/workspace/calculator-xunit-testing/calculator.sln --no-restore
+dotnet test src/workspace/calculator-xunit-testing/calculator.sln --no-build
 ```
+
+To use the generated SDK 8 pin, run commands from inside
+`src/workspace/calculator-xunit-testing/` with `calculator.sln` as the solution
+argument. Root-invoked commands may select SDK 10 but must still build
+`net8.0` projects before the upgrade.
+
+After prompt `3.01`, use `calculator.slnx` with SDK 10 instead. Later command
+reference tables and the four-project structure describe that upgraded stage.
 
 Expected result: the solution restores, builds, and the xUnit tests pass across
 addition, subtraction, multiplication, division, modulo, exponentiation,
@@ -763,7 +794,9 @@ flowchart LR
 
 - The project is intentionally compact and uses calculator behavior rather than
   a domain-heavy business model.
-- The active workspace is a .NET 10 console app plus xUnit test project.
+- Learners start with .NET 8 console and xUnit projects. SDK 10 selection,
+  framework retargeting, and `.slnx` migration belong to prompt `3.01`; the
+  later workspace also includes a shared library and Blazor app.
 - Docker must be running before the Testcontainers-backed tests execute.
 - The CSV file remains the human-editable source for arithmetic test cases.
 - The PostgreSQL container is temporary for automated tests and is cleaned up at

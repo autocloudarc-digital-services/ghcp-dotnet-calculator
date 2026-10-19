@@ -28,13 +28,23 @@ Use this skill when the user asks to:
 | [scripts/Set-DotnetCalculatorSolution.ps1](./scripts/Set-DotnetCalculatorSolution.ps1) | Idempotent setup script for the .NET 8 solution and xUnit test project |
 | [templates/Calculator.cs](./templates/Calculator.cs) | Starter console source template used when `Calculator.cs` is missing |
 | [templates/CalculatorTest.cs](./templates/CalculatorTest.cs) | Starter xUnit test template used when `CalculatorTest.cs` is missing |
+| [templates/global.json](./templates/global.json) | Workspace-local SDK 8 selection while SDKs 8 and 10 are installed |
 
 ## Prerequisites
 
 * Git repository available so `git rev-parse --show-toplevel` works
-* .NET 8 SDK or later available through `dotnet`
+* .NET 8 SDK available through `dotnet`; the Dev Container also installs SDK 10
 * PowerShell 7 or later available through `pwsh`
 * Write access to `src/workspace/`
+
+The Dev Container installs both SDK 8 and SDK 10. Setup creates a workspace-local
+`global.json` selecting a serviced SDK 8 feature band and explicitly creates
+`net8.0` projects. Keep that baseline through the console, CSV, and PostgreSQL
+exercises. Select SDK 10 and use GitHub Copilot upgrade only at prompt `3.01`.
+The SDK pin is generated, not repository-wide, so the existing .NET 10
+implementation remains usable until separately preserved or removed.
+Do not rerun initial
+setup over an already upgraded workspace to downgrade it.
 
 ## Required Procedure
 
@@ -55,7 +65,8 @@ The bundled script performs these actions idempotently:
 
 * Detects the repository root with `git rev-parse --show-toplevel`
 * Creates `src/workspace/calculator-xunit-testing/`
-* Creates or verifies the solution file
+* Creates a workspace-local `global.json` selecting SDK 8 when missing
+* Creates or verifies the .NET 8-compatible `.sln` solution file
 * Creates `calculator` as a .NET 8 console project
 * Creates `calculator.tests` as a .NET 8 xUnit project
 * Pins required test package versions from prompt 1.12.1
@@ -70,7 +81,8 @@ The bundled script performs these actions idempotently:
 
 ```text
 src/workspace/calculator-xunit-testing/
-├── calculator.slnx
+├── calculator.sln
+├── global.json
 ├── calculator/
 │   ├── calculator.csproj
 │   └── Calculator.cs
@@ -98,9 +110,15 @@ The setup must preserve these prompt `1.12.1` constraints:
 After running the script, validate from the repository root:
 
 ```powershell
-dotnet build src/workspace/calculator-xunit-testing/calculator.slnx
-dotnet test src/workspace/calculator-xunit-testing/calculator.slnx --list-tests
+dotnet build src/workspace/calculator-xunit-testing/calculator.sln
+dotnet test src/workspace/calculator-xunit-testing/calculator.sln --list-tests
 ```
+
+New initial solutions use `.sln`, which the .NET 8 SDK supports. Existing
+solution files are reused. Run `dotnet --version` from inside the generated
+workspace to verify SDK 8 selection; the repository root may select SDK 10.
+Prompt `3.01` updates the workspace SDK pin to 10 and migrates the solution
+to `.slnx` for the later exercises.
 
 ## Troubleshooting
 

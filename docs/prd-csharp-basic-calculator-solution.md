@@ -117,6 +117,14 @@ As a developer, I want to create a .NET 8 console calculator application that pe
 ## 1.9 Assumptions And Dependencies
 
 * Development uses the .NET 8 SDK.
+* The Dev Container installs SDKs and runtimes for .NET 8 and .NET 10 side
+  by side. Initial setup creates a workspace-local `global.json` selecting
+  SDK 8; run commands inside that workspace to apply the pin.
+  Console, CSV, and PostgreSQL stages retain `net8.0`. Select SDK 10 and
+  retarget only at prompt `3.01`, using GitHub Copilot upgrade
+  (`ms-dotnettools.upgrade-agent`, the successor to App Modernization).
+* Initial solutions use `calculator.sln` for SDK 8 compatibility. Prompt
+  `3.01` updates the SDK pin and migrates to `calculator.slnx`.
 * xUnit is the unit testing framework.
 * Developers have access to .NET development tools.
 * The application uses standard C# console I/O.
@@ -124,13 +132,15 @@ As a developer, I want to create a .NET 8 console calculator application that pe
 
 ### 1.9.1 Package Versions
 
-Initial-stage package examples, not the active test project's version inventory:
+Initial setup versions from the
+[calculator-setup skill](../.github/skills/calculator-setup/SKILL.md), not the
+post-upgrade test project's version inventory:
 
 | Package                   | Version |
 |---------------------------|---------|
-| xunit                     | 2.5.3   |
-| xunit.runner.visualstudio | 2.5.3   |
-| Microsoft.NET.Test.Sdk    | 17.8.0  |
+| xunit                     | 2.6.2   |
+| xunit.runner.visualstudio | 2.5.1   |
+| Microsoft.NET.Test.Sdk    | 17.5.0  |
 | coverlet.collector        | 6.0.0   |
 
 ## 1.10 Success Criteria
@@ -181,7 +191,10 @@ Initial-stage package examples, not the active test project's version inventory:
 
 ### 1.12.1 Solution Setup
 
-Create a PowerShell script named `Set-DotnetSlnForCalculator.ps1` in `$(git rev-parse --show-toplevel)\src\workspace` that performs these actions:
+Use the existing
+[calculator-setup script](../.github/skills/calculator-setup/scripts/Set-DotnetCalculatorSolution.ps1)
+from the repository root rather than creating a parallel setup script. It
+performs these actions:
 
 * Creates a solution folder named `calculator-xunit-testing`.
 * Sets up a new solution using `dotnet new sln`.
@@ -198,27 +211,32 @@ Implementation notes:
 * Use the standard `dotnet new` templates and ensure both project files target `net8.0`.
 * The setup script can pass `--framework net8.0` when creating supported project templates.
 * Keep the solution under `src/workspace/calculator-xunit-testing`.
+* Use `calculator.sln` for the .NET 8 stage; `.slnx` requires a later SDK.
+* Validate with `dotnet build src/workspace/calculator-xunit-testing/calculator.sln`
+  and `dotnet test src/workspace/calculator-xunit-testing/calculator.sln`.
+* Do not change the workspace SDK pin, target frameworks, or solution format before prompt
+  `3.01`. Do not downgrade an already completed workspace to repeat setup.
 
 ### 1.12.2 Calculator Implementation
 
 The initial console-stage solution uses this file structure:
 
-| File                                 | Purpose                                                              |
-|--------------------------------------|----------------------------------------------------------------------|
-| `calculator/Calculator.cs`           | Top-level console interaction, prompting, looping, and user feedback |
-| `calculator/CalculatorOperations.cs` | Public static arithmetic methods used by the console app and tests   |
-| `calculator.tests/CalculatorTest.cs` | xUnit tests for arithmetic operations and divide-by-zero cases       |
+| File                                 | Purpose                                                                        |
+|--------------------------------------|--------------------------------------------------------------------------------|
+| `calculator/Calculator.cs`           | Top-level console interaction, prompting, looping, and user feedback           |
+| `calculator/CalculatorOperations.cs` | Case expressions for arithmetic operations used by the console app and tests   |
+| `calculator.tests/CalculatorTest.cs` | xUnit tests for arithmetic operations and divide-by-zero cases                 |
 
 Implementation requirements:
 
-* Define public static methods for arithmetic operations in `CalculatorOperations.cs`.
+* Define case expressions for arithmetic operations in `CalculatorOperations.cs`.
 * Keep top-level console statements in `Calculator.cs`.
-* Prompt for the first operand, second operand, and operator.
 * Perform the appropriate arithmetic operation.
 * Display the result or a friendly error message.
 * Ask whether the user wants to perform another calculation.
 * Handle user responses to continue or exit.
 * Use nullable-aware input handling for console input.
+* To implement the initial console workflow correctly, prompt for first operand, operator, and then second operand.
 
 > [!IMPORTANT]
 > Top-level statements and class or namespace declarations cannot be mixed in the same C# source file in invalid order. Keep reusable operation methods in `CalculatorOperations.cs` and the console workflow in `Calculator.cs`.
@@ -230,6 +248,7 @@ Implementation requirements:
 * Add screen clearing for a better user experience.
 * Implement modulo and exponent operations.
 * Add null handling to prevent input-related exceptions.
+* As part of demonstrating an additional refactor, change the order of operations to prompt for first operand, second operand, and then operator.
 
 ### 1.12.4 Testing Strategy
 
