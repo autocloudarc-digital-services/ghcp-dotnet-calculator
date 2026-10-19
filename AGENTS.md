@@ -106,6 +106,9 @@ For browser-facing calculator changes, use the
 `validate-calculator-with-playwright` skill. The baseline smoke test opens
 `http://localhost:5000`, performs `7 + 3 =` through accessible button names,
 and verifies that the rendered status value is exactly `10`.
+For release/deployment readiness, exercise the actual published output as well.
+Use changing component parameters for history rendering, preserve native
+keyboard activation, and distinguish transport reconnect from a new circuit.
 
 ## Architecture And Boundaries
 
@@ -174,6 +177,13 @@ changes scoped to the exercise directory that owns them. Run the relevant
 Bicep, Terraform, or Azure Developer CLI validation before deployment, and do
 not deploy or delete cloud resources without explicit user approval.
 
+The default template is web-only; automated PostgreSQL fixtures do not justify
+a runtime database or Key Vault. Ask for missing target/authentication choices
+and explicit cost approval, then use `deploy-calculator-to-azure`. Keep prompt
+`3.02` assessment-only and retain partial status when native tools are missing.
+Reconcile CLI deployment errors with OneDeploy, startup diagnostics, HTTPS
+health, and browser checks; never hide the error or broaden cloud scope.
+
 ## Change Workflow And Completion Criteria
 
 Inspect the current file contents and working tree before editing because the
@@ -201,19 +211,16 @@ The Cloud VM snapshot has the .NET 10 SDK and Docker Engine preinstalled, and
 the update script runs `dotnet restore` on startup. The notes below capture the
 non-obvious caveats for this environment.
 
-* Active solution path: the buildable .NET 10 solution lives at
- `src/completed/calculator-xunit-testing/` in this environment, not the
- `src/workspace/calculator-xunit-testing/` path referenced elsewhere in this
- file. The `src/workspace` scaffold is generated only by the
- `calculator-setup` skill and is absent by default. Use the `src/completed`
- paths for build, run, and test unless you have deliberately generated the
- workspace stage.
-* Docker daemon is not started automatically. Start it before running
- `dotnet test`, because `calculator.tests` launches a `postgres:15.1`
- Testcontainer. Run `sudo dockerd` in a background terminal, then make the
- socket usable for the current shell with `sudo chmod 666 /var/run/docker.sock`
- (group membership added during setup applies only to new logins). The
- `postgres:15.1` image is already cached in the snapshot.
+* Discover the live solution before choosing paths. Prefer
+ `src/workspace/calculator-xunit-testing/` when present. Some snapshots have
+ only the completed reference, but use `src/completed/` only when the task
+ explicitly permits reference-solution work; otherwise use `calculator-setup`
+ for the requested initial stage. Never overwrite an existing later stage.
+* Docker startup and cached images vary by snapshot. Check `docker info`;
+ do not assume the daemon is absent or start a duplicate. Use the approved
+ devcontainer Docker setup/group permissions, not a world-writable Docker
+ socket. If access fails on a shared host, ask the environment owner rather
+ than changing daemon/socket permissions globally.
 * The Blazor web app listens on `http://localhost:5000` with a `/health`
  endpoint; wait for `Healthy` before driving the UI. The baseline smoke test is
  `7 + 3 =`, which must render `10`.

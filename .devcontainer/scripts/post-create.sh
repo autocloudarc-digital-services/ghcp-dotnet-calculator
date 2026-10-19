@@ -8,6 +8,7 @@ set -euo pipefail
 
 readonly SOLUTION_PATH="src/workspace/calculator-xunit-testing/calculator.slnx"
 readonly PLAYWRIGHT_VERSION="1.52.0-alpha-2025-03-26"
+readonly BROWSER_TOOLS_PATH=".github/skills/validate-calculator-with-playwright"
 
 require_command() {
   local command_name="$1"
@@ -70,6 +71,14 @@ main() {
     printf "ERROR: The .NET 10 SDK is unavailable.\n" >&2
     return 1
   }
+  dotnet --list-runtimes | grep -q '^Microsoft.NETCore.App 10\.' || {
+    printf "ERROR: The .NET 10 runtime is unavailable.\n" >&2
+    return 1
+  }
+  dotnet --list-runtimes | grep -q '^Microsoft.AspNetCore.App 10\.' || {
+    printf "ERROR: The ASP.NET Core 10 runtime is unavailable.\n" >&2
+    return 1
+  }
   dotnet --list-runtimes | grep -q '^Microsoft.NETCore.App 8\.' || {
     printf "ERROR: The .NET 8 runtime is unavailable.\n" >&2
     return 1
@@ -88,6 +97,10 @@ main() {
   gh aw --version >/dev/null
   retry_command \
     npx -y "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chromium
+  # The standalone runner and MCP can require different Chromium revisions.
+  retry_command npm ci --include=dev --prefix "${BROWSER_TOOLS_PATH}" --no-audit --no-fund
+  retry_command \
+    npm exec --prefix "${BROWSER_TOOLS_PATH}" -- playwright install chromium
 
   if [[ -f "${SOLUTION_PATH}" ]]; then
     dotnet restore "${SOLUTION_PATH}"
@@ -96,6 +109,8 @@ main() {
   printf "Codespaces toolchain validation completed.\n"
   printf "Authentication remains user-scoped. Run 'gh auth status' and "
   printf "'az account show' before exercises that use those services.\n"
+  printf "Verify GitHub Copilot upgrade in the active VS Code profile; "
+  printf "configured extensions/MCP servers do not prove tools are exposed.\n"
 }
 
 main "$@"

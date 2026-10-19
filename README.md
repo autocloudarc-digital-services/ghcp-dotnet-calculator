@@ -314,6 +314,58 @@ Expected result: the console app prompts for two operands and one operator. It
 supports `+`, `-`, `*`, `/`, `%`, and `^`, then asks whether to perform another
 calculation.
 
+### Run The Blazor App
+
+After completing the Blazor refactor exercise, start the web app:
+
+```bash
+dotnet run --project src/workspace/calculator-xunit-testing/calculator.web/calculator.web.csproj --urls http://localhost:5000
+```
+
+Open `http://localhost:5000` and calculate `7 + 3 =`; the display should show
+`10`. The `/health` endpoint returns `Healthy`. Both the console and web app use
+`calculator.library` for arithmetic.
+
+Use the keypad or keyboard for digits, `.`, `+`, `-`, `*`, `/`, `%`, and `^`.
+Number keys use neutral colours, operators amber, clear red, and equals green
+in both themes, with a recessed LCD-style display and raised key feedback.
+Enter or `=` calculates; C, Delete, and Backspace clear the current calculation.
+Operations execute left to right when chained. History keeps the latest 50
+successful calculations; select a history result to reuse it. History and
+light/dark appearance are scoped to the current browser circuit, not persisted.
+The web calculator needs no database connection; automated arithmetic tests
+continue to seed their isolated PostgreSQL Testcontainer from the CSV.
+
+### Deploy The Web App To Azure
+
+The active solution targets .NET 10. The default [Bicep template](infra/main.bicep)
+deploys a web-only Linux App Service with a single B1 instance, HTTPS, WebSockets,
+session affinity, `/health` monitoring, and bounded filesystem logs. It does not
+provision PostgreSQL, Key Vault, or Application Insights. Only publish
+`calculator.web`; its output includes `calculator.library`, not the console app,
+test assemblies, or database fixtures.
+
+Obtain explicit approval for the subscription, resource group, region, globally
+unique web app name, and hosting cost before provisioning. The B1 plan remains
+billable even when the web app is stopped, and does not support deployment slots.
+History and theme remain circuit-local and reset after a full page refresh.
+
+[Azure Developer CLI metadata](azure.yaml) maps the `web` service to App Service.
+For an initialized AZD environment, configure `AZURE_SUBSCRIPTION_ID`,
+`AZURE_RESOURCE_GROUP`, `AZURE_LOCATION`, and `AZURE_WEB_APP_NAME`; AZD supplies
+`AZURE_ENV_NAME`. The web app name is required by
+[`infra/main.parameters.json`](infra/main.parameters.json). Its `${...}` values
+require AZD substitution; direct Azure CLI deployments must pass explicit Bicep
+parameter values instead. SCM and FTP basic publishing authentication stay
+disabled; use Microsoft Entra authentication for deployment.
+
+See the [assessment and approved deployment follow-up](docs/azure-migration-assessment-3.02.md)
+for the actual target, validation evidence, and remaining limitations. Use the
+[deployment skill](.github/skills/deploy-calculator-to-azure/SKILL.md) only after
+separate cost/scope approval; the assessment prompt itself never deploys.
+The [repeatable browser runner](.github/skills/validate-calculator-with-playwright/SKILL.md#repeatable-extended-runner)
+validates published or Azure interactivity and actual transport reconnection.
+
 ### Review The Test Data
 
 The test project copies `TestCases.csv` to the test output directory and seeds a
@@ -578,6 +630,7 @@ domain complexity.
 | Build solution | `dotnet build src/workspace/calculator-xunit-testing/calculator.slnx` |
 | Run tests | `dotnet test src/workspace/calculator-xunit-testing/calculator.slnx` |
 | Run console app | `dotnet run --project src/workspace/calculator-xunit-testing/calculator/calculator.csproj` |
+| Run Blazor app | `dotnet run --project src/workspace/calculator-xunit-testing/calculator.web/calculator.web.csproj --urls http://localhost:5000` |
 | Recreate workspace | `pwsh -NoProfile -ExecutionPolicy Bypass -File src/workspace/Set-DotnetSlnForCalculator.ps1` |
 | Preview generated-workspace reset | `pwsh .github/skills/reset-calculator-lab/scripts/Remove-DotnetSlnForCalculator.ps1 -WhatIf` |
 | Install GitHub Agentic Workflows CLI | `gh extension install github/gh-aw` |

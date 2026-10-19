@@ -35,6 +35,9 @@ The Calculator xUnit Testing project is a .NET 10 solution demonstrating shared 
 * Keep tests in `CalculatorTest.cs` and use descriptive test names such as `[MethodName]_[Scenario]_[ExpectedBehavior]`.
 * Use xUnit `Assert` APIs for test assertions.
 * Document public C# members with XML documentation comments.
+* Verify actual project target frameworks before upgrades; SDK installation alone does not retarget projects. Preserve staged pre-upgrade .NET 8 material.
+* Pass changing state into child components explicitly; validate immediate rendered history updates, not only mutations to an injected service.
+* On .NET 10, preserve static asset endpoints and validate published Release CSS/JavaScript, not just a development server.
 
 ## Key Practices
 
@@ -47,3 +50,6 @@ dotnet test src/workspace/calculator-xunit-testing/calculator.slnx
 * Use `[Fact]` for single-scenario tests.
 * Use `[Theory]` with `[InlineData]` or `[MemberData]` when parameterized tests are introduced.
 * Keep generated `bin/` and `obj/` output out of documentation examples unless discussing build artifacts.
+* Use the browser-validation skill for UI changes, including readiness, history, keyboard/native focus, theme, and circuit isolation. HTTP 200 and passing service tests alone are insufficient.
+* Keep fixture seeding ahead of execution, disable discovery enumeration for database-backed xUnit v2 `MemberData`, use invariant finite numeric parsing, and dispose failed-start containers.
+* Audit direct/transitive NuGet packages after dependency changes without suppressing warnings. Container image servicing is a separate check.

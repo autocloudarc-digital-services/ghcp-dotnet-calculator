@@ -1,6 +1,6 @@
 ---
 name: validate-calculator-with-playwright
-description: "Validate the Blazor calculator with Playwright and recover its local server when needed. Use when: Use Playwright to open http://localhost:5000, click 7 + 3 =, and confirm the display shows 10; test calculator buttons; verify a calculator result; run the calculator UI smoke test; troubleshoot ERR_CONNECTION_REFUSED on localhost:5000."
+description: "Validate local, published Release, or Azure Blazor calculator UI with Playwright, including circuit readiness, history, keyboard, themes, and actual WebSocket recovery. Use when: click 7 + 3 = and confirm 10, test calculator buttons, run calculator UI smoke test, validate published calculator, verify Azure calculator, troubleshoot localhost connection refused."
 ---
 
 # Validate Calculator With Playwright
@@ -22,13 +22,15 @@ Use this skill when the user asks to:
 
 ## Prerequisites
 
-* The Playwright MCP server is configured and enabled
+* Exposed Playwright MCP tools, or the bundled standalone runner below
 * The .NET SDK required by `calculator.web` is available through `dotnet`
 * The calculator web project exists under
   `src/workspace/calculator-xunit-testing/calculator.web/`
-* Port 5000 is available or already hosts this calculator
+* The requested origin is available; port 5000 is only the default local URL
 
-Use the `configure-mcp-servers` skill if Playwright tools are unavailable.
+Configured MCP JSON is not proof that tools are exposed in the active session.
+Use `configure-mcp-servers` for MCP setup/reload, or the standalone fallback.
+Do not fabricate tool names or claim a browser check from HTTP-only results.
 
 ## Parameters Reference
 
@@ -47,7 +49,8 @@ Honor values supplied by the user instead of these defaults.
    to the browser interaction. If another page occupies the requested port,
    report its title and stop without starting a second server.
 3. If navigation fails with `ERR_CONNECTION_REFUSED`, locate the current web
-   project with a targeted file search for `**/calculator.web.csproj`.
+   project only for an intended local origin. A cloud failure must be diagnosed
+   against that cloud target, not "recovered" by launching a local substitute.
 4. Prefer the project under `src/workspace/calculator-xunit-testing/`. Use a
    project under `src/completed/` only when the file actually exists.
 5. Start the project in an asynchronous persistent terminal with the requested
@@ -83,6 +86,43 @@ Honor values supplied by the user instead of these defaults.
    the expected and observed values before cleanup.
 12. On success, report the URL, expression, and confirmed display value.
 
+## Repeatable Extended Runner
+
+The [runner](./scripts/verify-calculator.cjs) persists the release/browser
+regressions learned during the Azure exercise. It never starts a server or
+changes Azure configuration. It creates isolated browser contexts, changes only
+their circuit-local calculator state, and closes its browsers on failure too.
+
+From the repository root:
+
+```bash
+npm ci --include=dev --prefix .github/skills/validate-calculator-with-playwright
+npm exec --prefix .github/skills/validate-calculator-with-playwright -- playwright install chromium
+npm run --prefix .github/skills/validate-calculator-with-playwright verify -- http://localhost:5000
+```
+
+Supply the actual local published-output or HTTPS Azure root URL instead of
+the default when appropriate. The runner intentionally tests the standard
+`7 + 3 = 10` contract; use the manual flow for custom expressions.
+The lock file pins the standalone SDK. The devcontainer preflight prepares its
+matching Chromium; on other Linux hosts install browser system dependencies
+with the same `playwright install --with-deps chromium` command if needed.
+Run `npm test --prefix .github/skills/validate-calculator-with-playwright` for
+fast invalid-target/credential-redaction checks without starting a browser.
+
+The extended checks cover immediate history updates, replay/clear, rendering
+after the 50-entry cap, keyboard arithmetic versus native Tab/Enter activation,
+theme, isolated clients, 320-pixel
+layout, normal error-banner visibility, asset failures, and page exceptions.
+They close a passthrough WebSocket and require a replacement connection plus
+preserved circuit history/theme before claiming reconnect success. A browser
+offline toggle alone may leave an established WebSocket alive. Full refresh
+must instead create a new circuit with empty history and default theme.
+
+For deployment readiness, publish Release to a separate staging directory,
+run that exact output on an available validation port, and test it before
+packaging. Keep the pre-existing developer server untouched.
+
 ## Playwright Interaction
 
 Prefer role-based locators because the calculator exposes stable accessible
@@ -115,7 +155,7 @@ perform the display assertion as a separate final action.
 
 A successful result must include all of the following evidence:
 
-* URL: `http://localhost:5000`
+* URL: the actual tested origin (`http://localhost:5000` by default)
 * Expression: `7 + 3 =`
 * Expected display: `10`
 * Observed display: `10`
@@ -146,6 +186,21 @@ the `Current Calculation` region.
 
 Use `getByRole('status')`. The calculator renders its display with an HTML
 `output` element, which Playwright exposes with the `status` role.
+
+### Chromium Revision Is Missing
+
+MCP and the standalone SDK may require different Chromium revisions. Install
+through the matching pinned package, not an unrelated global Playwright CLI.
+Do not hardcode a cached revision path or silently pick the newest cached
+executable; an existing cache directory alone is not a compatible installation.
+
+### Published Assets Or History Are Stale
+
+On .NET 10, verify `MapStaticAssets`, framework/CSS/JS requests, and global
+connection-error banner styles. Verify history in the rendered child component:
+an unchanged callback with an injected mutable service can skip its rerender.
+Passing entries as state parameters fixes that boundary; unit tests of the
+backing service alone cannot detect it.
 
 ## Cleanup
 

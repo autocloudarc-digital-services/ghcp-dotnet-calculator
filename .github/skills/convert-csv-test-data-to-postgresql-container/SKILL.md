@@ -1,14 +1,10 @@
 ---
 name: convert-csv-test-data-to-postgresql-container
-description: Convert CSV test data to PostgreSQL database container
+description: "Seed a persistent local PostgreSQL container from calculator CSV data with secure prompting and row-count rerun checks. Use when: manually seed local PostgreSQL, inspect calculator database contents, convert CSV test data to a PostgreSQL container."
 license: MIT
 disable-model-invocation: true
 user-invocable: true
-compatibility:
-
-  - powershell-7
-  - docker
-
+compatibility: PowerShell 7+, Docker daemon access, and a readable TestCases.csv file.
 ---
 
 # Convert CSV Test Data to PostgreSQL Container
@@ -17,13 +13,17 @@ Create a PostgreSQL database container and import CSV test data into it.
 
 ## Purpose and positioning
 
-Use this skill for persistent local PostgreSQL workflows during iterative app and UI development.
+Use this opt-in skill for manual persistent PostgreSQL exercises or an explicitly
+approved database-backed feature. The current Blazor calculator runtime does not
+need it. Model invocation is intentionally disabled; if the host does not expose
+a callable skill, read this guide and review the script before executing the
+user-requested workflow rather than claiming a nonexistent invocation.
 
 Use prompt `2.03-switch-test-data-to-pg` for automated test isolation. That flow uses Testcontainers with per-run randomized credentials and avoids fixed host port assumptions.
 
 Why this split exists:
 
-* Persistent container workflow supports stable local connection settings while iterating on Blazor and app features.
+* Persistent container workflow supports stable connection settings for manual database exercises or future approved database-backed features.
 * Testcontainers is preferred for CI and routine automated test runs because it is isolated, reproducible, and avoids plaintext credential examples.
 
 ## Automated Option (Recommended)
@@ -80,7 +80,7 @@ If `-PostgresPassword` is not provided, the script securely prompts for it.
 ### Troubleshooting
 
 * Port already in use (`5432`): use `-HostPort 5433`.
-* Container exists with old settings: rerun with `-ForceRecreate`.
+* Container exists with old settings: inspect ownership/settings and ask before `-ForceRecreate`, which removes the existing container/data.
 * Docker not running: start Docker Desktop and run the script again.
 * Invalid CSV headers: ensure headers are present and not empty.
 
@@ -89,9 +89,17 @@ If `-PostgresPassword` is not provided, the script securely prompts for it.
 * Do not hardcode passwords in scripts, prompts, or docs.
 * Prefer interactive secure prompt behavior for local usage.
 * For automation, pass secrets via a secure environment or secret store.
+* Docker retains environment credentials in the persistent container's
+  configuration; avoid sharing raw `docker inspect` output. This differs from
+  per-run Testcontainers credentials.
+* Row-count rerun checks do not compare CSV contents. Equal-size data edits can
+  leave stale rows; inspect values and obtain approval before resetting data.
+  Prefer a supported, serviced, explicitly selected image for repeatability,
+  but do not change an existing database engine as an incidental cleanup.
 
 ### Quick Verification Command
 
 ```pwsh
-docker exec -it test-container psql -U postgres_user -d test_db -c "SELECT COUNT(*) FROM test_data;"
+docker exec test-container psql -U postgres_user -d test_db -c "SELECT COUNT(*) FROM test_data;"
+docker exec test-container psql -U postgres_user -d test_db -c "SELECT * FROM test_data;"
 ```

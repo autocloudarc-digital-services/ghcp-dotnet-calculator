@@ -6,7 +6,8 @@ description: Repository-specific GitHub Copilot guidance for the calculator solu
 ## GitHub Copilot Instructions for Calculator Workspace
 
 **Version:** 2.0  
-**Last Updated:** June 2026  
+**Last Updated:** October 2026
+
 **Repository:** `ghcp-dotnet-calculator`
 
 ## Overview
@@ -93,7 +94,7 @@ src/
 - Prefer pure functions where possible.
 - Apply SOLID principles.
 - Replace long conditionals with the strategy pattern.
-- Add logging using the internal telemetry wrapper `hwLog()`.
+- Use existing framework logging, such as ASP.NET Core `ILogger<T>`. Do not invent a telemetry wrapper that does not exist in the workspace.
 
 ### Language-Specific Conventions
 
@@ -115,7 +116,7 @@ src/
 - Use async/await for I/O operations
 - Keep pure calculator behavior in `calculator.library`, application wiring in `calculator` or `calculator.web`, and assertions in `calculator.tests`
 - For CSV-backed calculator tests, keep `TestCases.csv` in the `calculator.tests` project root and copy it to the output directory
-- For iterative local app/UI development, use a persistent local PostgreSQL container seeded from `TestCases.csv`
+- For optional manual PostgreSQL exercises, use a persistent local container seeded from `TestCases.csv`; the current Blazor arithmetic/history/theme runtime does not need a database
 - For automated PostgreSQL-backed calculator tests, prefer Testcontainers with per-run randomized credentials and runtime CSV seeding
 - Use the PostgreSQL container seeding skill to maintain stable local connection settings during refactoring
 - Do not include plaintext credential examples in prompts, skills, docs, or test code
@@ -154,6 +155,16 @@ src/
 - For calculator validation, run `dotnet test src/workspace/calculator-xunit-testing/calculator.slnx`
 - To recreate the exercise solution, use the `calculator-setup` skill. To reset it after Exercise 99.08, use the `reset-calculator-lab` skill and preview its bundled script with `-WhatIf`.
 - Keep integration/E2E tests deterministic and isolated; prefer ephemeral resources such as Testcontainers when feasible
+- Confirm actual project targets rather than inferring them from the SDK. For web changes, validate published Release interactivity with the browser skill, not HTTP status or unit tests alone.
+
+### Azure Assessment And Deployment Boundaries
+
+- Prompt `3.02` is read-only assessment; unavailable native tools mean explicitly partial native-tool coverage, not permission to invent reports or run migration tools.
+- Use `deploy-calculator-to-azure` only for separately approved implementation/provisioning/deployment. Collect missing target/authentication decisions and explicit cost approval; never reuse a prior session's subscription or resource names implicitly.
+- The default Bicep is web-only. Do not provision PostgreSQL, Key Vault, or paid telemetry just because database-backed tests exist. Keep AZD's required `AZURE_WEB_APP_NAME` and explicit resource group/region mapping aligned.
+- Preserve healthy local services and unrelated containers. Do not log out, stop services, change SKU/region, enable basic publishing authentication, or delete resources to work around missing approval or a diagnostic failure.
+- Retain upload/deployment exit codes and reconcile them with OneDeploy, worker/startup diagnostics, HTTPS health, and actual browser results. Do not equate ZIP acceptance with readiness or silently relabel a startup-tracker failure as a successful command.
+- Publish one immutable web-only artifact, retain its hash and rollback copy durably for a real release, and report B1's ongoing charges and lack of deployment slots.
 
 ---
 

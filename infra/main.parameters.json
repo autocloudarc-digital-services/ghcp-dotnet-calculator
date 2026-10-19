@@ -8,14 +8,8 @@
         "location": {
             "value": "${AZURE_LOCATION}"
         },
-        "postgresAdministratorLogin": {
-            "value": "calcadmin"
-        },
-        "postgresAdministratorLoginPassword": {
-            "value": "${POSTGRES_ADMIN_PASSWORD}"
-        },
-        "postgresDatabaseName": {
-            "value": "calculator"
+        "webAppName": {
+            "value": "${AZURE_WEB_APP_NAME}"
         },
         "resourcePrefix": {
             "value": "calc"

@@ -1,0 +1,18 @@
+@inject ThemeService Theme
+
+<button type="button" class="theme-toggle" aria-label="Dark mode"
+        aria-pressed="@Theme.IsDark.ToString().ToLowerInvariant()" @onclick="ToggleAsync">
+    @(Theme.IsDark ? "Light theme" : "Dark theme")
+</button>
+
+@code {
+    /// <summary>Gets or sets the notification that the page appearance changed.</summary>
+    [Parameter]
+    public EventCallback ThemeChanged { get; set; }
+
+    private async Task ToggleAsync()
+    {
+        Theme.Toggle();
+        await ThemeChanged.InvokeAsync();
+    }
+}

@@ -12,6 +12,15 @@ description: Product requirements for the .NET 8 calculator console application 
 | Date    | 2025-11-03     |
 | Status  | Draft          |
 
+This PRD intentionally defines the initial .NET 8 console/two-project stage,
+not the live post-upgrade inventory. Its GUI/history exclusions and package
+examples apply to that stage. Later requirements are captured by the
+[.NET 10 upgrade](../.github/prompts/3.01-upgrade-dotnet-from-8-to-10.prompt.md),
+[Blazor refactor](../.github/skills/refactor-calculator-blazor-app/SKILL.md),
+and [Azure assessment/deployment follow-up](azure-migration-assessment-3.02.md).
+Read live project files for current targets and dependencies; do not downgrade
+or recreate a later workspace to match this baseline.
+
 ## 1.2 Executive Summary
 
 This product requirements document defines a basic .NET 8 console calculator application with xUnit testing. The calculator supports standard arithmetic operations and demonstrates testability, maintainability, null safety, and error handling in a compact C# solution.
@@ -115,7 +124,7 @@ As a developer, I want to create a .NET 8 console calculator application that pe
 
 ### 1.9.1 Package Versions
 
-The current test project uses these package versions:
+Initial-stage package examples, not the active test project's version inventory:
 
 | Package                   | Version |
 |---------------------------|---------|
@@ -192,7 +201,7 @@ Implementation notes:
 
 ### 1.12.2 Calculator Implementation
 
-The active solution uses this file structure:
+The initial console-stage solution uses this file structure:
 
 | File                                 | Purpose                                                              |
 |--------------------------------------|----------------------------------------------------------------------|

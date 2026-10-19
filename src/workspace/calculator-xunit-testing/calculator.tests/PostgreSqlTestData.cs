@@ -27,8 +27,7 @@ public sealed class PostgreSqlTestData : IAsyncLifetime
     {
         try
         {
-            container = new PostgreSqlBuilder()
-                .WithImage("postgres:15.1")
+            container = new PostgreSqlBuilder("postgres:15.1")
                 .WithUsername($"user_{Guid.NewGuid():N}")
                 .WithPassword(Convert.ToHexString(RandomNumberGenerator.GetBytes(32)))
                 .WithDatabase($"test_{Guid.NewGuid():N}")

@@ -1,0 +1,95 @@
+@page "/"
+@implements IAsyncDisposable
+@inject CalculatorService Calculator
+@inject HistoryService History
+@inject ThemeService Theme
+@inject IJSRuntime JS
+
+<PageTitle>Calculator</PageTitle>
+
+<div class="calculator-shell @Theme.CssClass">
+    <a class="skip-link" href="#main">Skip to calculator</a>
+    <div class="workspace">
+        <header class="app-header">
+            <div>
+                <p class="eyebrow">CALCULATOR LAB</p>
+                <h1>Calculator</h1>
+                <p class="subtitle">A little space to work things out.</p>
+            </div>
+            <ThemeToggle ThemeChanged="StateHasChanged" />
+        </header>
+        <main id="main" class="calculator-grid">
+            <section class="calculator-panel card" aria-labelledby="calculation-heading">
+                <h2 id="calculation-heading">Current Calculation</h2>
+                <div class="display-panel">
+                    <p class="expression">@(Calculator.Expression.Length == 0 ? "Ready" : Calculator.Expression)</p>
+                    <output aria-label="Calculator display" aria-live="polite">@Calculator.Display</output>
+                </div>
+                @if (Calculator.ErrorMessage is not null)
+                {
+                    <p class="error-message" role="alert">@Calculator.ErrorMessage</p>
+                }
+                <CalculatorKeypad KeyPressed="HandleInput" />
+                <p class="hint keyboard-hint">Use your keyboard too. Enter to calculate; C, Delete or Backspace to clear.</p>
+            </section>
+            <HistoryPanel Entries="History.Entries" ClearRequested="History.Clear" ReplayRequested="Calculator.Replay" />
+        </main>
+        <footer>Six operations. Immediate results. History stays in this session.</footer>
+    </div>
+</div>
+
+@code {
+    private IJSObjectReference? module;
+    private IJSObjectReference? keyboard;
+    private DotNetObjectReference<Home>? reference;
+
+    /// <summary>Connects successful calculations to circuit-scoped history.</summary>
+    protected override void OnInitialized() => Calculator.CalculationCompleted += History.Add;
+
+    /// <summary>Attaches the keyboard listener after interactive rendering.</summary>
+    /// <param name="firstRender">Whether this is the first interactive render.</param>
+    /// <returns>A task representing JavaScript module initialization.</returns>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        reference = DotNetObjectReference.Create(this);
+        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calculator.js");
+        keyboard = await module.InvokeAsync<IJSObjectReference>("attach", reference);
+    }
+
+    private void HandleInput(string key) => Calculator.Input(key);
+
+    /// <summary>Processes a supported global keyboard action and refreshes the display.</summary>
+    /// <param name="key">The key mapped by the keyboard module.</param>
+    /// <returns>A task representing the UI state update.</returns>
+    [JSInvokable]
+    public Task HandleKeyboard(string key) => InvokeAsync(() =>
+    {
+        Calculator.Input(key);
+        StateHasChanged();
+    });
+
+    /// <summary>Detaches history and keyboard callbacks when leaving the page.</summary>
+    /// <returns>A task representing JavaScript reference cleanup.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        Calculator.CalculationCompleted -= History.Add;
+        try
+        {
+            if (keyboard is not null)
+            {
+                await keyboard.InvokeVoidAsync("dispose");
+                await keyboard.DisposeAsync();
+            }
+            if (module is not null) await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // A disconnected circuit cannot invoke browser-side cleanup.
+        }
+        finally
+        {
+            reference?.Dispose();
+        }
+    }
+}

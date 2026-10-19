@@ -13,6 +13,10 @@ Refactor `src/workspace/calculator-xunit-testing/` from a console-focused calcul
 
 Use the active workspace's target framework. Do not rewrite intentional pre-upgrade .NET 8 references in historical prompts or docs while applying this skill to the current post-upgrade workspace.
 
+Read every participating `.csproj` first. The SDK version is not the target
+framework. If the intended .NET 10 upgrade was skipped, report that fact rather
+than silently upgrading while performing this refactor.
+
 ## Project Shape
 
 Target this structure when it is not already present:
@@ -60,6 +64,26 @@ src/workspace/calculator-xunit-testing/
 13. Replace template layout/navigation with a focused calculator shell and remove unused sample pages when safe.
 14. Style the app with responsive CSS, stable keypad dimensions, focus-visible states, high-contrast operator buttons, and mobile layout support.
 
+## Rendering And Circuit Reliability
+
+* Pass current history entries and clear/replay callbacks to `HistoryPanel`.
+  An injected mutable service plus an unchanged `EventCallback` does not
+  guarantee child rerendering. Check immediate updates and replacement at the
+  50-entry cap, not only the backing service's contents.
+* Keep neutral numbers, amber operators, red Clear, and green Equals readable
+  in both themes and hover states. Preserve accessible names when displaying
+  conventional multiplication/division/minus glyphs.
+* Distinguish typed calculator input from native Tab/Enter button activation;
+  do not let a global keyboard handler activate the focused key twice.
+* Catch expected `JSDisconnectedException` during interop disposal and always
+  dispose .NET callback references. Do not hide unrelated JavaScript failures.
+* On .NET 10, use `MapStaticAssets` and inspect published CSS/JS/framework
+  requests. If CSS isolation is removed, move necessary error-banner styling
+  into loaded global CSS and remove stale generated-stylesheet links. The
+  connection-error banner must be hidden during normal operation.
+* Explain that history/theme are circuit-local: transient transport recovery
+  can preserve them, but a new circuit, refresh, or worker replacement cannot.
+
 ## Keyboard Map
 
 Support these keys through JavaScript interop and component callbacks:
@@ -86,6 +110,11 @@ dotnet run --project .\calculator.web\calculator.web.csproj --urls http://localh
 ```
 
 Verify the app responds with HTTP 200 before reporting the URL.
+
+Also use `validate-calculator-with-playwright` for actual interactivity.
+HTTP 200 or a prerendered `0` is not proof that the Blazor circuit is attached.
+Validate the published Release artifact as well as development execution;
+check history, keyboard, themes, separate circuits, and 320-pixel layout.
 
 ## Boundaries
 

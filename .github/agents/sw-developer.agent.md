@@ -1,8 +1,8 @@
 ---
 name: sw-developer
-description: Assists with common software development tasks for .NET and Angular.
+description: Assists with .NET, Blazor, and Angular development, preserving calculator project boundaries and validated UI behavior.
 target: vscode
-model: GPT-5.5 (copilot)
+model: GPT-6.1 Sol (copilot)
 handoffs:
 
   - label: software-quality-tester
@@ -24,6 +24,16 @@ handoffs:
 - When generating code, adhere to best practices and coding standards for the respective language and framework.
 - Provide clear and concise explanations for your suggestions and code.
 - You can use the tools available to you to gather information and perform actions.
+
+## Calculator Workspace
+
+Use the actual target frameworks, not the installed SDK, as the starting point.
+Keep arithmetic in `calculator.library`, UI/circuit state in `calculator.web`,
+and isolated PostgreSQL fixtures in tests. Follow the Blazor refactor and browser
+validation skills for changing state parameters, immediate history updates,
+keyboard/native focus, theme contrast, disposal, and published Release assets.
+Do not add a runtime database or deploy cloud resources as an incidental
+refactor. Record unavailable tools and actual validation results honestly.
 
 ## Tools
 

@@ -86,6 +86,14 @@ YAML, and Markdown extensions. It hides `src/completed/`, `bin/`, and `obj/`
 from the Explorer so the finished solution and generated files do not distract
 from the exercises.
 
+GitHub Copilot upgrade (`ms-dotnettools.upgrade-agent`) is the current upgrade
+extension; do not use the retired modernization extension ID/version. After
+changing devcontainer extensions, rebuild and verify the active remote VS Code
+profile. `code --list-extensions --show-versions` reports that environment, not
+every client profile. A configured extension is not proof its native assessment
+tools are exposed. Likewise, C# Dev Kit does not configure a separate CLI LSP;
+use the `lsp-setup` skill if that host needs code intelligence.
+
 The default terminal profile is Bash. Open **Terminal: Select Default Profile**
 and choose PowerShell when an exercise uses a `powershell` code block or
 PowerShell syntax such as `Get-Content`, `Test-Path`, or `Remove-Item`. The
@@ -94,8 +102,8 @@ selected profile affects new terminals only.
 ## Run The Environment Preflight
 
 The post-create script validates required commands, checks the .NET 10 SDK,
-.NET 8 runtimes, Bicep, Docker, and `gh-aw`, installs the Chromium revision used
-by the pinned Playwright MCP server, and restores the calculator solution.
+.NET 8/10 runtimes, Bicep, Docker, and `gh-aw`, prepares Chromium for the pinned
+Playwright MCP server and locked standalone browser runner, and restores the solution.
 Rerun it after a rebuild or when diagnosing a partial setup:
 
 ```bash
@@ -106,6 +114,7 @@ Inspect versions when reporting a setup problem:
 
 ```bash
 dotnet --list-sdks
+dotnet --list-runtimes
 docker version
 node --version
 npx --version
@@ -118,6 +127,17 @@ az bicep version
 azd version
 terraform version
 ```
+
+`dotnet --version` identifies the selected SDK, while each `.csproj` declares
+its actual target framework. SDK 10 plus .NET 8 runtimes can successfully run
+an unupgraded `net8.0` solution. Read project metadata rather than treating the
+toolchain inventory as proof the upgrade happened.
+
+Configured MCP servers may not be exposed in every host. The
+[browser-validation skill](../.github/skills/validate-calculator-with-playwright/SKILL.md#repeatable-extended-runner)
+includes a standalone fallback for local, published Release, and Azure targets.
+Use its locked SDK and matching browser installation; do not hardcode a cached
+Chromium revision or assume the MCP and standalone packages need the same one.
 
 Verify Docker and the full Testcontainers path before Exercise 01.04:
 

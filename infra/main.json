@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.39.26.7824",
-      "templateHash": "15226015084231029005"
+      "version": "0.48.1.52935",
+      "templateHash": "6799125459730370055"
     }
   },
   "parameters": {
@@ -22,11 +22,19 @@
         "description": "The Azure region where resources are deployed."
       }
     },
+    "webAppName": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 60,
+      "metadata": {
+        "description": "The globally unique App Service web app name."
+      }
+    },
     "resourcePrefix": {
       "type": "string",
       "defaultValue": "calc",
       "metadata": {
-        "description": "Short prefix used in Azure resource names."
+        "description": "Short prefix used in the App Service plan name."
       }
     },
     "serviceName": {
@@ -39,8 +47,11 @@
     "runtimeStack": {
       "type": "string",
       "defaultValue": "DOTNETCORE|10.0",
+      "allowedValues": [
+        "DOTNETCORE|10.0"
+      ],
       "metadata": {
-        "description": "The Linux App Service runtime stack."
+        "description": "The Linux App Service runtime stack, aligned with the active solution."
       }
     },
     "appServicePlanSkuName": {
@@ -52,238 +63,33 @@
         "P0v3"
       ],
       "metadata": {
-        "description": "The App Service plan SKU."
-      }
-    },
-    "postgresAdministratorLogin": {
-      "type": "string",
-      "defaultValue": "calcadmin",
-      "metadata": {
-        "description": "The PostgreSQL administrator login name."
-      }
-    },
-    "postgresAdministratorLoginPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The PostgreSQL administrator login password."
-      }
-    },
-    "postgresDatabaseName": {
-      "type": "string",
-      "defaultValue": "calculator",
-      "metadata": {
-        "description": "The PostgreSQL database name used by the calculator application."
-      }
-    },
-    "postgresSkuName": {
-      "type": "string",
-      "defaultValue": "Standard_B1ms",
-      "metadata": {
-        "description": "The PostgreSQL Flexible Server SKU name."
-      }
-    },
-    "postgresSkuTier": {
-      "type": "string",
-      "defaultValue": "Burstable",
-      "metadata": {
-        "description": "The PostgreSQL Flexible Server SKU tier."
-      }
-    },
-    "postgresStorageSizeGB": {
-      "type": "int",
-      "defaultValue": 32,
-      "metadata": {
-        "description": "The PostgreSQL Flexible Server storage size in gibibytes."
-      }
-    },
-    "postgresVersion": {
-      "type": "string",
-      "defaultValue": "17",
-      "metadata": {
-        "description": "The PostgreSQL engine version."
-      }
-    },
-    "postgresConnectionStringExpiresOn": {
-      "type": "string",
-      "defaultValue": "[dateTimeAdd(utcNow('u'), 'P90D')]",
-      "metadata": {
-        "description": "The expiration timestamp for the Key Vault PostgreSQL connection string value."
+        "description": "The App Service plan SKU. B1 is the default single-instance development tier."
       }
     },
     "tags": {
       "type": "object",
       "defaultValue": {},
       "metadata": {
-        "description": "Tags applied to all deployed resources."
+        "description": "Additional tags applied to all deployed resources."
       }
     }
   },
   "variables": {
     "normalizedEnvironmentName": "[toLower(replace(parameters('environmentName'), '_', '-'))]",
     "resourceToken": "[uniqueString(subscription().id, resourceGroup().id, parameters('location'), parameters('environmentName'))]",
-    "baseName": "[format('{0}-{1}-{2}', parameters('resourcePrefix'), variables('normalizedEnvironmentName'), variables('resourceToken'))]",
-    "keyVaultName": "[take(format('kv{0}{1}', parameters('resourcePrefix'), variables('resourceToken')), 24)]",
-    "postgresConnectionStringSecretName": "calculator-postgresql-connection-string",
-    "postgresHostName": "[format('{0}.postgres.database.azure.com', format('{0}-pg', variables('baseName')))]",
-    "postgresConnectionString": "[format('Host={0};Port=5432;Database={1};Username={2};Password={3};Ssl Mode=Require;', variables('postgresHostName'), parameters('postgresDatabaseName'), parameters('postgresAdministratorLogin'), parameters('postgresAdministratorLoginPassword'))]",
-    "commonTags": "[union(parameters('tags'), createObject('azd-env-name', parameters('environmentName'), 'workload', 'calculator'))]"
+    "commonTags": "[union(parameters('tags'), createObject('azd-env-name', parameters('environmentName'), 'environment', parameters('environmentName'), 'workload', 'calculator'))]"
   },
   "resources": [
     {
-      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2023-01-31",
-      "name": "[format('{0}-uami', variables('baseName'))]",
-      "location": "[parameters('location')]",
-      "tags": "[variables('commonTags')]"
-    },
-    {
-      "type": "Microsoft.OperationalInsights/workspaces",
-      "apiVersion": "2023-09-01",
-      "name": "[format('{0}-log', variables('baseName'))]",
-      "location": "[parameters('location')]",
-      "tags": "[variables('commonTags')]",
-      "properties": {
-        "sku": {
-          "name": "PerGB2018"
-        },
-        "retentionInDays": 30
-      }
-    },
-    {
-      "type": "Microsoft.Insights/components",
-      "apiVersion": "2020-02-02",
-      "name": "[format('{0}-appi', variables('baseName'))]",
-      "location": "[parameters('location')]",
-      "kind": "web",
-      "tags": "[variables('commonTags')]",
-      "properties": {
-        "Application_Type": "web",
-        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-log', variables('baseName')))]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-log', variables('baseName')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.KeyVault/vaults",
-      "apiVersion": "2023-07-01",
-      "name": "[variables('keyVaultName')]",
-      "location": "[parameters('location')]",
-      "tags": "[variables('commonTags')]",
-      "properties": {
-        "tenantId": "[subscription().tenantId]",
-        "enableRbacAuthorization": true,
-        "enablePurgeProtection": true,
-        "enableSoftDelete": true,
-        "publicNetworkAccess": "Enabled",
-        "sku": {
-          "family": "A",
-          "name": "standard"
-        },
-        "softDeleteRetentionInDays": 90
-      }
-    },
-    {
-      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
-      "apiVersion": "2024-08-01",
-      "name": "[format('{0}-pg', variables('baseName'))]",
-      "location": "[parameters('location')]",
-      "tags": "[variables('commonTags')]",
-      "sku": {
-        "name": "[parameters('postgresSkuName')]",
-        "tier": "[parameters('postgresSkuTier')]"
-      },
-      "properties": {
-        "administratorLogin": "[parameters('postgresAdministratorLogin')]",
-        "administratorLoginPassword": "[parameters('postgresAdministratorLoginPassword')]",
-        "authConfig": {
-          "activeDirectoryAuth": "Disabled",
-          "passwordAuth": "Enabled",
-          "tenantId": "[subscription().tenantId]"
-        },
-        "backup": {
-          "backupRetentionDays": 7,
-          "geoRedundantBackup": "Disabled"
-        },
-        "createMode": "Default",
-        "highAvailability": {
-          "mode": "Disabled"
-        },
-        "network": {
-          "publicNetworkAccess": "Enabled"
-        },
-        "storage": {
-          "autoGrow": "Enabled",
-          "storageSizeGB": "[parameters('postgresStorageSizeGB')]"
-        },
-        "version": "[parameters('postgresVersion')]"
-      }
-    },
-    {
-      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
-      "apiVersion": "2024-08-01",
-      "name": "[format('{0}/{1}', format('{0}-pg', variables('baseName')), parameters('postgresDatabaseName'))]",
-      "properties": {
-        "charset": "UTF8",
-        "collation": "en_US.utf8"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-pg', variables('baseName')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
-      "apiVersion": "2024-08-01",
-      "name": "[format('{0}/{1}', format('{0}-pg', variables('baseName')), 'AllowAzureServices')]",
-      "properties": {
-        "startIpAddress": "0.0.0.0",
-        "endIpAddress": "0.0.0.0"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-pg', variables('baseName')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.KeyVault/vaults/secrets",
-      "apiVersion": "2023-07-01",
-      "name": "[format('{0}/{1}', variables('keyVaultName'), variables('postgresConnectionStringSecretName'))]",
-      "properties": {
-        "attributes": {
-          "exp": "[dateTimeToEpoch(parameters('postgresConnectionStringExpiresOn'))]"
-        },
-        "contentType": "connection-string",
-        "value": "[variables('postgresConnectionString')]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers/databases', format('{0}-pg', variables('baseName')), parameters('postgresDatabaseName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-pg', variables('baseName')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2022-04-01",
-      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('keyVaultName'))]",
-      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName'))), 'Key Vault Secrets Officer')]",
-      "properties": {
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName'))), '2023-01-31').principalId]",
-        "principalType": "ServicePrincipal",
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName')))]"
-      ]
-    },
-    {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2023-12-01",
-      "name": "[format('{0}-plan', variables('baseName'))]",
+      "name": "[format('{0}-{1}-{2}-plan', parameters('resourcePrefix'), variables('normalizedEnvironmentName'), variables('resourceToken'))]",
       "location": "[parameters('location')]",
       "kind": "linux",
       "tags": "[variables('commonTags')]",
       "sku": {
-        "name": "[parameters('appServicePlanSkuName')]"
+        "name": "[parameters('appServicePlanSkuName')]",
+        "capacity": 1
       },
       "properties": {
         "reserved": true
@@ -292,92 +98,92 @@
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2023-12-01",
-      "name": "[format('{0}-{1}', variables('baseName'), parameters('serviceName'))]",
+      "name": "[parameters('webAppName')]",
       "location": "[parameters('location')]",
       "kind": "app,linux",
       "tags": "[union(variables('commonTags'), createObject('azd-service-name', parameters('serviceName')))]",
-      "identity": {
-        "type": "SystemAssigned, UserAssigned",
-        "userAssignedIdentities": {
-          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName'))))]": {}
-        }
-      },
       "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('{0}-plan', variables('baseName')))]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('{0}-{1}-{2}-plan', parameters('resourcePrefix'), variables('normalizedEnvironmentName'), variables('resourceToken')))]",
         "httpsOnly": true,
-        "keyVaultReferenceIdentity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName')))]",
-        "clientAffinityEnabled": false,
+        "clientAffinityEnabled": true,
         "publicNetworkAccess": "Enabled",
         "siteConfig": {
           "alwaysOn": true,
-          "cors": {
-            "allowedOrigins": [],
-            "supportCredentials": false
-          },
+          "webSocketsEnabled": true,
           "ftpsState": "Disabled",
           "healthCheckPath": "/health",
           "http20Enabled": true,
           "linuxFxVersion": "[parameters('runtimeStack')]",
           "minTlsVersion": "1.2",
+          "scmMinTlsVersion": "1.2",
           "appSettings": [
             {
               "name": "ASPNETCORE_ENVIRONMENT",
               "value": "Production"
             },
             {
-              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[reference(resourceId('Microsoft.Insights/components', format('{0}-appi', variables('baseName'))), '2020-02-02').ConnectionString]"
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "false"
             },
             {
-              "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
-              "value": "~3"
-            },
-            {
-              "name": "ConnectionStrings__CalculatorPostgreSql",
-              "value": "[format('@Microsoft.KeyVault(SecretUri={0})', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('postgresConnectionStringSecretName')), '2023-07-01').secretUriWithVersion)]"
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
             }
           ]
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Insights/components', format('{0}-appi', variables('baseName')))]",
-        "[resourceId('Microsoft.Web/serverfarms', format('{0}-plan', variables('baseName')))]",
-        "[extensionResourceId(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName'))), 'Key Vault Secrets Officer'))]",
-        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('postgresConnectionStringSecretName'))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-uami', variables('baseName')))]"
+        "[resourceId('Microsoft.Web/serverfarms', format('{0}-{1}-{2}-plan', parameters('resourcePrefix'), variables('normalizedEnvironmentName'), variables('resourceToken')))]"
       ]
     },
     {
-      "type": "Microsoft.Insights/diagnosticSettings",
-      "apiVersion": "2021-05-01-preview",
-      "scope": "[format('Microsoft.Web/sites/{0}', format('{0}-{1}', variables('baseName'), parameters('serviceName')))]",
-      "name": "[format('{0}-diag', format('{0}-{1}', variables('baseName'), parameters('serviceName')))]",
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('webAppName'), 'scm')]",
       "properties": {
-        "logs": [
-          {
-            "category": "AppServiceHTTPLogs",
-            "enabled": true
-          },
-          {
-            "category": "AppServiceConsoleLogs",
-            "enabled": true
-          },
-          {
-            "category": "AppServiceAppLogs",
-            "enabled": true
-          }
-        ],
-        "metrics": [
-          {
-            "category": "AllMetrics",
-            "enabled": true
-          }
-        ],
-        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-log', variables('baseName')))]"
+        "allow": false
       },
       "dependsOn": [
-        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-log', variables('baseName')))]",
-        "[resourceId('Microsoft.Web/sites', format('{0}-{1}', variables('baseName'), parameters('serviceName')))]"
+        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('webAppName'), 'ftp')]",
+      "properties": {
+        "allow": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2023-12-01",
+      "name": "[format('{0}/{1}', parameters('webAppName'), 'logs')]",
+      "properties": {
+        "applicationLogs": {
+          "fileSystem": {
+            "level": "Information"
+          }
+        },
+        "httpLogs": {
+          "fileSystem": {
+            "enabled": true,
+            "retentionInDays": 3,
+            "retentionInMb": 35
+          }
+        },
+        "detailedErrorMessages": {
+          "enabled": false
+        },
+        "failedRequestsTracing": {
+          "enabled": false
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
       ]
     }
   ],
@@ -386,25 +192,17 @@
       "type": "string",
       "value": "[parameters('location')]"
     },
-    "POSTGRESQL_DATABASE_NAME": {
-      "type": "string",
-      "value": "[parameters('postgresDatabaseName')]"
-    },
-    "POSTGRESQL_SERVER_NAME": {
-      "type": "string",
-      "value": "[format('{0}-pg', variables('baseName'))]"
-    },
     "RESOURCE_GROUP_ID": {
       "type": "string",
       "value": "[resourceGroup().id]"
     },
     "SERVICE_WEB_NAME": {
       "type": "string",
-      "value": "[format('{0}-{1}', variables('baseName'), parameters('serviceName'))]"
+      "value": "[parameters('webAppName')]"
     },
     "SERVICE_WEB_URI": {
       "type": "string",
-      "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', format('{0}-{1}', variables('baseName'), parameters('serviceName'))), '2023-12-01').defaultHostName)]"
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2023-12-01').defaultHostName)]"
     }
   }
 }
